@@ -7,7 +7,6 @@ import styles from "./HeroSection.module.css";
 
 const CinematicLayer = dynamic(() => import("./CinematicLayer"), { ssr: false });
 
-// Lives outside React — never resets on re-render or scroll
 let globalMuted = true;
 
 export default function HeroSection() {
@@ -17,40 +16,40 @@ export default function HeroSection() {
   const roleRef      = useRef<HTMLParagraphElement>(null);
   const ctaRef       = useRef<HTMLDivElement>(null);
   const scrollRef    = useRef<HTMLButtonElement>(null);
+  const sectionRef   = useRef<HTMLElement>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isMuted, setIsMuted] = useState(globalMuted);
 
   useEffect(() => {
     const v = videoRef.current;
-    if (!v) return;
+    const section = sectionRef.current;
+    if (!v || !section) return;
 
     v.volume = 1;
+    v.muted  = true;
+    v.play().then(() => {
+      v.muted  = globalMuted;
+      v.volume = 1;
+    }).catch(() => {});
 
-    // Start muted (browser rule), then after play begins apply saved preference
-    v.muted = true;
-    v.play()
-      .then(() => {
-        // Apply user's last choice after playback starts
-        v.muted = globalMuted;
-        v.volume = 1;
-      })
-      .catch(() => {});
-
-    // IntersectionObserver — keep audio state when hero scrolls in/out of view
+    // Watch the SECTION — pause audio when scrolled away, resume when back
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          // Hero scrolled back into view — restore saved mute state
+          // Back on hero — restore saved mute state
           v.muted  = globalMuted;
           v.volume = 1;
           setIsMuted(globalMuted);
+        } else {
+          // Scrolled away — mute the audio (video keeps playing visually off-screen)
+          v.muted = true;
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.3 }
     );
 
-    if (v) observer.observe(v);
+    observer.observe(section);
     return () => observer.disconnect();
   }, []);
 
@@ -68,14 +67,14 @@ export default function HeroSection() {
     const v = videoRef.current;
     if (!v) return;
     const nowMuted = !isMuted;
-    v.muted    = nowMuted;
-    v.volume   = 1;
-    globalMuted = nowMuted; // Save so it persists everywhere
+    v.muted     = nowMuted;
+    v.volume    = 1;
+    globalMuted = nowMuted;
     setIsMuted(nowMuted);
   };
 
   return (
-    <section className={styles.hero}>
+    <section ref={sectionRef} className={styles.hero}>
 
       <div className={styles.bgVideoWrap}>
         <video
