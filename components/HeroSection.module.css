@@ -1,12 +1,14 @@
 .hero {
   position: relative;
   width: 100%;
-  height: 100svh; /* svh = safe viewport height on mobile (avoids browser chrome overlap) */
+  height: 100svh;
   min-height: 600px;
   overflow: hidden;
   display: flex;
   align-items: center;
   scroll-snap-align: start;
+  /* Ensure content is never clipped on left */
+  overflow-x: clip;
 }
 
 .bgVideoWrap {
@@ -41,11 +43,10 @@
 .content {
   position: relative;
   z-index: 4;
-  padding: 0 6vw;
-  padding-top: 5rem; /* clear any top nav */
-  padding-bottom: 8rem; /* clear mute btn + scroll indicator at bottom */
-  max-width: 780px;
+  padding: 5rem 6vw 8rem 6vw;
+  max-width: 100%;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .tagline {
@@ -61,11 +62,13 @@
 
 .name {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(4rem, 14vw, 11rem);
+  font-size: clamp(3.5rem, 11vw, 11rem);
   line-height: 0.88;
   letter-spacing: -0.01em;
   opacity: 0;
   display: block;
+  word-break: keep-all;
+  overflow: visible;
 }
 
 .role {
@@ -262,10 +265,10 @@
 /* ---- Tablet ---- */
 @media (max-width: 768px) {
   .content {
-    padding: 4rem 5vw 9rem;
+    padding: 4rem 5vw 9rem 5vw;
     max-width: 100%;
   }
-  .name { font-size: clamp(3.5rem, 16vw, 6rem); }
+  .name { font-size: clamp(3rem, 13vw, 5.5rem); }
   .cta { gap: 0.6rem; }
   .muteBtn {
     bottom: 4.5rem;
@@ -277,8 +280,8 @@
 
 /* ---- Small mobile (≤380px) ---- */
 @media (max-width: 380px) {
-  .content { padding: 3.5rem 4vw 8.5rem; }
-  .name { font-size: clamp(3rem, 18vw, 5rem); }
+  .content { padding: 3.5rem 4vw 8.5rem 4vw; }
+  .name { font-size: clamp(2.8rem, 14vw, 4rem); }
   .tagline { font-size: 0.55rem; letter-spacing: 0.15em; }
   .role { font-size: 0.85rem; }
   .cta { flex-direction: column; gap: 0.5rem; }
