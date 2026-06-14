@@ -46,11 +46,11 @@ export default function AboutSection() {
           <FadeIn delay={0.35}>
             <div className={styles.stats}>
               <div className={styles.stat}>
-                <span className={styles.statNum}>1+</span>
+                <span className={styles.statNum}>2+</span>
                 <span className={styles.statLabel}>Year Experience</span>
               </div>
               <div className={styles.stat}>
-                <span className={styles.statNum}>5+</span>
+                <span className={styles.statNum}>6+</span>
                 <span className={styles.statLabel}>Locations Managed</span>
               </div>
               <div className={styles.stat}>
