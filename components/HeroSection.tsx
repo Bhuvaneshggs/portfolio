@@ -7,7 +7,7 @@ import styles from "./HeroSection.module.css";
 
 const CinematicLayer = dynamic(() => import("./CinematicLayer"), { ssr: false });
 
-// Module-level variable — persists across scrolling/re-renders for the whole session
+// Lives outside React — never resets on re-render or scroll
 let globalMuted = true;
 
 export default function HeroSection() {
@@ -24,10 +24,34 @@ export default function HeroSection() {
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
-    // Restore whatever the user last chose
-    v.muted  = globalMuted;
+
     v.volume = 1;
-    v.play().catch(() => {});
+
+    // Start muted (browser rule), then after play begins apply saved preference
+    v.muted = true;
+    v.play()
+      .then(() => {
+        // Apply user's last choice after playback starts
+        v.muted = globalMuted;
+        v.volume = 1;
+      })
+      .catch(() => {});
+
+    // IntersectionObserver — keep audio state when hero scrolls in/out of view
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          // Hero scrolled back into view — restore saved mute state
+          v.muted  = globalMuted;
+          v.volume = 1;
+          setIsMuted(globalMuted);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (v) observer.observe(v);
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -44,9 +68,9 @@ export default function HeroSection() {
     const v = videoRef.current;
     if (!v) return;
     const nowMuted = !isMuted;
-    v.muted  = nowMuted;
-    v.volume = 1;
-    globalMuted = nowMuted; // Save globally so it persists when user scrolls back
+    v.muted    = nowMuted;
+    v.volume   = 1;
+    globalMuted = nowMuted; // Save so it persists everywhere
     setIsMuted(nowMuted);
   };
 
