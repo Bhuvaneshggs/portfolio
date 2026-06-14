@@ -15,32 +15,27 @@ export default function HeroSection() {
   const ctaRef       = useRef<HTMLDivElement>(null);
   const scrollRef    = useRef<HTMLButtonElement>(null);
 
-  const [isMuted, setIsMuted]         = useState(true);
-  const [isPlaying, setIsPlaying]     = useState(false);
-  const [showSoundHint, setShowHint]  = useState(true);
+  const [isMuted, setIsMuted]        = useState(true);
+  const [isPlaying, setIsPlaying]    = useState(false);
+  const [showSoundHint, setShowHint] = useState(true);
 
-  // Refs to the actual <video> DOM nodes (injected via dangerouslySetInnerHTML)
-  const fgWrapRef = useRef<HTMLDivElement>(null);
   const bgWrapRef = useRef<HTMLDivElement>(null);
-  const fgVid     = useRef<HTMLVideoElement | null>(null);
   const bgVid     = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
-    // Grab the real DOM video nodes — bypasses React's broken muted prop
-    fgVid.current = fgWrapRef.current?.querySelector("video") ?? null;
     bgVid.current = bgWrapRef.current?.querySelector("video") ?? null;
 
     const play = async (v: HTMLVideoElement | null) => {
       if (!v) return;
       v.muted = true;
       v.loop  = true;
-      try { await v.play(); } catch { /* blocked — user must tap */ }
+      try { await v.play(); } catch { /* autoplay blocked */ }
     };
 
-    play(fgVid.current).then(() => setIsPlaying(true)).catch(() => {});
-    play(bgVid.current);
+    play(bgVid.current).then(() => setIsPlaying(true)).catch(() => {});
 
-    const t = setTimeout(() => setShowHint(false), 4500);
+    // Hide sound hint after 6 seconds
+    const t = setTimeout(() => setShowHint(false), 6000);
     return () => clearTimeout(t);
   }, []);
 
@@ -56,27 +51,25 @@ export default function HeroSection() {
   }, []);
 
   const toggleMute = () => {
-    if (!fgVid.current) return;
-    fgVid.current.muted = !isMuted;
+    const v = bgVid.current;
+    if (!v) return;
+    v.muted = !isMuted;
     setIsMuted(m => !m);
     setShowHint(false);
   };
 
   const togglePlay = () => {
-    const v = fgVid.current;
-    const b = bgVid.current;
+    const v = bgVid.current;
     if (!v) return;
     if (isPlaying) {
-      v.pause(); b?.pause();
+      v.pause();
       setIsPlaying(false);
     } else {
       v.muted = true;
       v.play().then(() => setIsPlaying(true)).catch(console.warn);
-      b?.play().catch(console.warn);
     }
   };
 
-  // Raw HTML string — this is the ONLY reliable way to get muted autoplay in React/Next.js
   const videoHTML = `<video
     autoplay
     loop
@@ -91,7 +84,7 @@ export default function HeroSection() {
   return (
     <section className={styles.hero}>
 
-      {/* BG blurred video — raw HTML injection */}
+      {/* Full-screen background video */}
       <div className={styles.bgVideoWrap}>
         <div
           ref={bgWrapRef}
@@ -103,24 +96,6 @@ export default function HeroSection() {
 
       <div className={styles.gradientOverlay} />
       <CinematicLayer />
-
-      {/* FG portrait video — raw HTML injection */}
-      <div className={styles.videoPortrait}>
-        <div
-          ref={fgWrapRef}
-          dangerouslySetInnerHTML={{ __html: videoHTML }}
-          className={styles.fgVideoInner}
-        />
-        {!isPlaying && (
-          <button className={styles.manualPlay} onClick={togglePlay} aria-label="Play video">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
-              <polygon points="5,3 19,12 5,21" />
-            </svg>
-          </button>
-        )}
-        <div className={styles.videoGlow} />
-        <div className={styles.videoVignette} />
-      </div>
 
       {/* Text */}
       <div className={styles.content}>
@@ -164,11 +139,12 @@ export default function HeroSection() {
         </button>
       </div>
 
+      {/* Big sound hint button — browser requires user interaction for audio */}
       {showSoundHint && isPlaying && (
-        <div className={styles.soundHint} onClick={toggleMute}>
+        <button className={styles.soundHint} onClick={toggleMute}>
           <span className={styles.soundDot} />
-          Tap for sound
-        </div>
+          🔊 Tap for sound
+        </button>
       )}
 
       <button ref={scrollRef} className={styles.scrollIndicator} onClick={() => document.getElementById("about")?.scrollIntoView({ behavior:"smooth" })} aria-label="Scroll down">
