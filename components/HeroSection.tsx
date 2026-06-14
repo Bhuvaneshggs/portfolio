@@ -15,8 +15,6 @@ export default function HeroSection() {
   const ctaRef       = useRef<HTMLDivElement>(null);
   const scrollRef    = useRef<HTMLButtonElement>(null);
 
-  const [isMuted, setIsMuted]        = useState(true);
-  const [isPlaying, setIsPlaying]    = useState(false);
   const [showSoundHint, setShowHint] = useState(true);
 
   const bgWrapRef = useRef<HTMLDivElement>(null);
@@ -24,19 +22,29 @@ export default function HeroSection() {
 
   useEffect(() => {
     bgVid.current = bgWrapRef.current?.querySelector("video") ?? null;
+    const v = bgVid.current;
+    if (!v) return;
 
-    const play = async (v: HTMLVideoElement | null) => {
-      if (!v) return;
-      v.muted = true;
-      v.loop  = true;
-      try { await v.play(); } catch { /* autoplay blocked */ }
+    v.muted  = true;
+    v.loop   = true;
+    v.volume = 1;
+    v.play().catch(() => {});
+
+    // First click anywhere on page → unmute + full volume
+    const unlock = () => {
+      if (!bgVid.current) return;
+      bgVid.current.muted  = false;
+      bgVid.current.volume = 1;
+      setShowHint(false);
+      document.removeEventListener("click", unlock);
     };
+    document.addEventListener("click", unlock);
 
-    play(bgVid.current).then(() => setIsPlaying(true)).catch(() => {});
-
-    // Hide sound hint after 6 seconds
-    const t = setTimeout(() => setShowHint(false), 6000);
-    return () => clearTimeout(t);
+    const t = setTimeout(() => setShowHint(false), 7000);
+    return () => {
+      clearTimeout(t);
+      document.removeEventListener("click", unlock);
+    };
   }, []);
 
   // GSAP entrance
@@ -49,26 +57,6 @@ export default function HeroSection() {
       .fromTo(ctaRef.current,       { opacity:0, y:20 },           { opacity:1, y:0, duration:0.8, ease:"power2.out" }, "-=0.4")
       .fromTo(scrollRef.current,    { opacity:0 },                 { opacity:1, duration:0.6 }, "-=0.2");
   }, []);
-
-  const toggleMute = () => {
-    const v = bgVid.current;
-    if (!v) return;
-    v.muted = !isMuted;
-    setIsMuted(m => !m);
-    setShowHint(false);
-  };
-
-  const togglePlay = () => {
-    const v = bgVid.current;
-    if (!v) return;
-    if (isPlaying) {
-      v.pause();
-      setIsPlaying(false);
-    } else {
-      v.muted = true;
-      v.play().then(() => setIsPlaying(true)).catch(console.warn);
-    }
-  };
 
   const videoHTML = `<video
     autoplay
@@ -123,28 +111,12 @@ export default function HeroSection() {
         </div>
       </div>
 
-      {/* Controls */}
-      <div className={styles.controls}>
-        <button className={styles.controlBtn} onClick={togglePlay} aria-label={isPlaying ? "Pause" : "Play"}>
-          {isPlaying
-            ? <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-            : <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
-          }
-        </button>
-        <button className={styles.controlBtn} onClick={toggleMute} aria-label={isMuted ? "Unmute" : "Mute"}>
-          {isMuted
-            ? <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="11,5 6,9 2,9 2,15 6,15 11,19" fill="currentColor" stroke="none"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
-            : <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="11,5 6,9 2,9 2,15 6,15 11,19" fill="currentColor" stroke="none"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-          }
-        </button>
-      </div>
-
-      {/* Big sound hint button — browser requires user interaction for audio */}
-      {showSoundHint && isPlaying && (
-        <button className={styles.soundHint} onClick={toggleMute}>
+      {/* Sound hint — disappears on first click */}
+      {showSoundHint && (
+        <div className={styles.soundHint}>
           <span className={styles.soundDot} />
-          🔊 Tap for sound
-        </button>
+          Click anywhere for sound
+        </div>
       )}
 
       <button ref={scrollRef} className={styles.scrollIndicator} onClick={() => document.getElementById("about")?.scrollIntoView({ behavior:"smooth" })} aria-label="Scroll down">
