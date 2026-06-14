@@ -85,7 +85,7 @@ export default function HeroSection() {
     preload="auto"
     style="width:100%;height:100%;object-fit:cover;"
   >
-    <source src="/hero-video.mp4" type="video/mp4" />
+    <source src="/hero.mp4" type="video/mp4" />
   </video>`;
 
   return (
