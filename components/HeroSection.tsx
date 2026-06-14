@@ -7,6 +7,9 @@ import styles from "./HeroSection.module.css";
 
 const CinematicLayer = dynamic(() => import("./CinematicLayer"), { ssr: false });
 
+// Module-level variable — persists across scrolling/re-renders for the whole session
+let globalMuted = true;
+
 export default function HeroSection() {
   const taglineRef   = useRef<HTMLSpanElement>(null);
   const firstNameRef = useRef<HTMLHeadingElement>(null);
@@ -15,14 +18,14 @@ export default function HeroSection() {
   const ctaRef       = useRef<HTMLDivElement>(null);
   const scrollRef    = useRef<HTMLButtonElement>(null);
 
-  // Direct ref to the actual <video> element
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(globalMuted);
 
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
-    v.muted  = true;
+    // Restore whatever the user last chose
+    v.muted  = globalMuted;
     v.volume = 1;
     v.play().catch(() => {});
   }, []);
@@ -43,13 +46,13 @@ export default function HeroSection() {
     const nowMuted = !isMuted;
     v.muted  = nowMuted;
     v.volume = 1;
+    globalMuted = nowMuted; // Save globally so it persists when user scrolls back
     setIsMuted(nowMuted);
   };
 
   return (
     <section className={styles.hero}>
 
-      {/* Direct React video ref — no dangerouslySetInnerHTML */}
       <div className={styles.bgVideoWrap}>
         <video
           ref={videoRef}
@@ -93,7 +96,6 @@ export default function HeroSection() {
         </div>
       </div>
 
-      {/* Sound button — direct onClick on real button, ref works now */}
       <button
         className={`${styles.muteBtn} ${isMuted ? styles.muteBtnMuted : styles.muteBtnOn}`}
         onClick={handleUnmute}
