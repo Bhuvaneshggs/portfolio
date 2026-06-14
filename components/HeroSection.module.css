@@ -1,0 +1,229 @@
+.hero {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  min-height: 700px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  scroll-snap-align: start;
+}
+
+.bgVideoWrap {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.bgVideo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.bgBlur {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 8, 8, 0.45);
+}
+
+.gradientOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(90deg, rgba(8,8,8,0.80) 0%, rgba(8,8,8,0.2) 100%),
+    linear-gradient(0deg, rgba(8,8,8,0.85) 0%, transparent 50%);
+}
+
+.content {
+  position: relative;
+  z-index: 4;
+  padding: 0 6vw;
+  max-width: 780px;
+}
+
+.tagline {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(0.6rem, 1vw, 0.75rem);
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--orange);
+  margin-bottom: 1.5rem;
+  opacity: 0;
+}
+
+.name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(5rem, 12vw, 11rem);
+  line-height: 0.88;
+  letter-spacing: -0.01em;
+  opacity: 0;
+  display: block;
+}
+
+.role {
+  margin-top: 2rem;
+  font-size: clamp(1rem, 1.5vw, 1.25rem);
+  font-weight: 300;
+  color: var(--white-dim);
+  line-height: 1.6;
+  opacity: 0;
+}
+
+.roleDetail {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(0.65rem, 0.9vw, 0.8rem);
+  color: var(--orange-light);
+  letter-spacing: 0.08em;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+.cta {
+  display: flex;
+  gap: 1.2rem;
+  margin-top: 2.5rem;
+  flex-wrap: wrap;
+  opacity: 0;
+}
+
+.ctaPrimary {
+  padding: 0.85rem 2rem;
+  background: var(--orange);
+  color: var(--black);
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+  border-radius: 2px;
+  transition: background 0.25s, transform 0.2s;
+}
+.ctaPrimary:hover { background: var(--orange-light); transform: translateY(-2px); }
+
+.ctaSecondary {
+  padding: 0.85rem 2rem;
+  background: var(--glass);
+  color: var(--white);
+  font-weight: 400;
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+  border-radius: 2px;
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(12px);
+  transition: background 0.25s, transform 0.2s;
+}
+.ctaSecondary:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
+
+.ctaResume {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.6rem;
+  border-radius: 2px;
+  border: 1px solid rgba(232,112,42,0.4);
+  color: var(--orange);
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  background: rgba(232,112,42,0.07);
+  transition: background 0.25s, border-color 0.25s, transform 0.2s;
+}
+.ctaResume:hover { background: rgba(232,112,42,0.15); border-color: var(--orange); transform: translateY(-2px); }
+
+/* ---- Sound button ---- */
+.muteBtn {
+  position: absolute;
+  bottom: 2.5rem;
+  right: 2rem;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.3rem;
+  border-radius: 100px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.2s;
+}
+
+/* Muted state — orange pulsing to grab attention */
+.muteBtnMuted {
+  background: var(--orange, #e8702a);
+  border: 2px solid rgba(255,255,255,0.3);
+  color: #fff;
+  animation: pulse 1.8s ease-in-out infinite;
+}
+
+/* Unmuted state — subtle */
+.muteBtnOn {
+  background: rgba(0,0,0,0.55);
+  border: 1.5px solid rgba(255,255,255,0.2);
+  color: #fff;
+  backdrop-filter: blur(12px);
+}
+
+.muteBtn:hover { transform: scale(1.06); }
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(232,112,42,0.7); }
+  50%       { box-shadow: 0 0 0 10px rgba(232,112,42,0); }
+}
+
+/* ---- Scroll indicator ---- */
+.scrollIndicator {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  opacity: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.scrollLabel {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--white-dim);
+}
+
+.scrollLine {
+  width: 1px;
+  height: 48px;
+  background: rgba(245,240,234,0.15);
+  position: relative;
+  overflow: hidden;
+  border-radius: 1px;
+}
+
+.scrollPulse {
+  position: absolute;
+  top: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, transparent, var(--orange), transparent);
+  animation: scrollAnim 1.8s ease-in-out infinite;
+}
+
+@keyframes scrollAnim {
+  0%   { top: -100%; }
+  100% { top: 100%; }
+}
+
+@media (max-width: 768px) {
+  .content { padding: 0 5vw; max-width: 100%; }
+  .name { font-size: clamp(4.5rem, 18vw, 7rem); }
+  .muteBtn { bottom: 1.5rem; right: 1rem; }
+}
