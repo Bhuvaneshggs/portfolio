@@ -1,0 +1,72 @@
+/* Hide default cursor site-wide */
+:global(*) {
+  cursor: none !important;
+}
+
+/* ---- Dot — snaps to cursor instantly ---- */
+.dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  background: #e8702a;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 99999;
+  /* Centre on the cursor point */
+  margin-left: -4px;
+  margin-top: -4px;
+  transition: background 0.2s;
+  will-change: transform;
+}
+
+/* ---- Ring — lerps behind the dot ---- */
+.ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 36px;
+  height: 36px;
+  border: 1.5px solid rgba(232, 112, 42, 0.6);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 99998;
+  /* Centre on the cursor point */
+  margin-left: -18px;
+  margin-top: -18px;
+  transition: width 0.25s ease, height 0.25s ease,
+              margin 0.25s ease, border-color 0.25s ease,
+              background 0.25s ease;
+  will-change: transform;
+}
+
+/* Hover state — ring grows, fills slightly */
+.ringHover {
+  width: 56px;
+  height: 56px;
+  margin-left: -28px;
+  margin-top: -28px;
+  border-color: rgba(232, 112, 42, 0.9);
+  background: rgba(232, 112, 42, 0.08);
+}
+
+/* Click state */
+.dotClick {
+  background: #fff;
+  transform: scale(1.5) !important;
+}
+
+.ringClick {
+  width: 20px;
+  height: 20px;
+  margin-left: -10px;
+  margin-top: -10px;
+  border-color: #fff;
+}
+
+/* Hide on touch */
+@media (hover: none) and (pointer: coarse) {
+  .dot, .ring { display: none !important; }
+  :global(*) { cursor: auto !important; }
+}
