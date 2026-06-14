@@ -1,0 +1,137 @@
+.about {
+  background: var(--dark);
+  padding: 8rem 6vw;
+  scroll-snap-align: start;
+  position: relative;
+}
+
+.about::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--orange-dim), transparent);
+}
+
+.inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5rem;
+  align-items: start;
+}
+
+.eyebrow {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--orange);
+  margin-bottom: 1.5rem;
+}
+
+.heading {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(2.8rem, 5vw, 4.5rem);
+  line-height: 0.95;
+  color: var(--white);
+  margin-bottom: 2rem;
+}
+
+.body {
+  font-size: 1rem;
+  line-height: 1.8;
+  color: var(--white-dim);
+  margin-bottom: 1.2rem;
+  max-width: 520px;
+}
+
+.stats {
+  display: flex;
+  gap: 2.5rem;
+  margin-top: 2.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.stat { display: flex; flex-direction: column; gap: 0.2rem; }
+
+.statNum {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.4rem;
+  color: var(--orange);
+  line-height: 1;
+}
+
+.statLabel {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--white-dim);
+}
+
+/* ---- Skills ---- */
+.skills { padding-top: 0.5rem; }
+
+.skillsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.skillCard {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 4px;
+  padding: 1.2rem 1.4rem;
+  transition: border-color 0.25s, background 0.25s;
+}
+
+.skillCard:hover {
+  border-color: var(--orange-dim);
+  background: rgba(232,112,42,0.04);
+}
+
+.skillCategory {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--orange);
+  margin-bottom: 0.8rem;
+}
+
+.skillList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.2rem;
+  list-style: none;
+}
+
+.skillItem {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  color: var(--white-dim);
+}
+
+.dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--orange);
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+@media (max-width: 900px) {
+  .inner { grid-template-columns: 1fr; gap: 3rem; }
+  .about { padding: 5rem 5vw; }
+}
