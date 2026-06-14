@@ -1,0 +1,159 @@
+.section {
+  background: var(--dark);
+  padding: 8rem 6vw 5rem;
+  scroll-snap-align: start;
+  position: relative;
+}
+
+.section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--orange-dim), transparent);
+}
+
+.inner {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.eyebrow {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--orange);
+  margin-bottom: 1.2rem;
+}
+
+.heading {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(3.5rem, 8vw, 7rem);
+  line-height: 0.9;
+  color: var(--white);
+  margin-bottom: 1.5rem;
+}
+
+.sub {
+  font-size: 1rem;
+  color: var(--white-dim);
+  line-height: 1.7;
+  max-width: 480px;
+  margin-bottom: 3.5rem;
+}
+
+/* ---- Contact cards ---- */
+.contacts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  margin-bottom: 4rem;
+}
+
+.contactCard {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.4rem 1.8rem;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 4px;
+  transition: border-color 0.25s, background 0.25s, transform 0.2s;
+  text-decoration: none;
+}
+
+.contactCard:hover {
+  border-color: var(--orange-dim);
+  background: rgba(232,112,42,0.05);
+}
+
+.icon {
+  width: 44px;
+  height: 44px;
+  background: var(--orange-dim);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--orange);
+  flex-shrink: 0;
+  transition: background 0.25s;
+}
+
+.contactCard:hover .icon {
+  background: rgba(232,112,42,0.25);
+}
+
+.cardContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1;
+}
+
+.cardLabel {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--orange);
+}
+
+.cardValue {
+  font-size: 0.95rem;
+  color: var(--white-dim);
+  transition: color 0.2s;
+}
+
+.contactCard:hover .cardValue { color: var(--white); }
+
+.arrow {
+  color: var(--white-dim);
+  font-size: 1.1rem;
+  transition: transform 0.2s, color 0.2s;
+}
+
+.contactCard:hover .arrow {
+  transform: translateX(4px);
+  color: var(--orange);
+}
+
+/* ---- Footer ---- */
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.footerName {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--white-dim);
+}
+
+.footerLoc {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: rgba(245,240,234,0.35);
+  letter-spacing: 0.06em;
+}
+
+.footerCopy {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: rgba(245,240,234,0.25);
+}
+
+@media (max-width: 600px) {
+  .section { padding: 5rem 5vw 3rem; }
+  .contactCard { padding: 1.1rem 1.2rem; gap: 1rem; }
+  .footer { flex-direction: column; align-items: flex-start; }
+}
