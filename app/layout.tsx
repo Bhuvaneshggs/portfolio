@@ -14,10 +14,19 @@ export const metadata: Metadata = {
     "Kubernetes",
     "Bhuvanesh Gopal",
   ],
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "32x32", type: "image/x-icon" },
+      { url: "/icon.png",    sizes: "512x512", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
+    shortcut: "/favicon.ico",
+  },
   openGraph: {
     title: "Bhuvanesh Gopal — IT Engineer & DevOps",
     description: "IT Infrastructure & DevOps Engineer based in Tamil Nadu, India.",
     type: "website",
+    images: [{ url: "/icon.png", width: 512, height: 512 }],
   },
 };
 
