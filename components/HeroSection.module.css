@@ -139,6 +139,37 @@
 }
 .ctaResume:hover { background: rgba(232,112,42,0.15); border-color: var(--orange); transform: translateY(-2px); }
 
+/* ---- Social icons ---- */
+.socials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1.8rem;
+  opacity: 0;
+}
+
+.socialIcon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(245,240,234,0.6);
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(8px);
+  transition: color 0.2s, border-color 0.2s, background 0.2s, transform 0.2s;
+  flex-shrink: 0;
+}
+
+.socialIcon:hover {
+  color: var(--orange);
+  border-color: var(--orange);
+  background: rgba(232,112,42,0.12);
+  transform: translateY(-3px);
+}
+
 /* ---- Mute button — always visible, never hidden ---- */
 .muteBtn {
   position: absolute;
@@ -265,4 +296,6 @@
     gap: 0.35rem;
   }
   .muteBtn svg { width: 13px; height: 13px; }
+  .socialIcon { width: 34px; height: 34px; }
+  .socials { gap: 0.45rem; margin-top: 1.4rem; }
 }
