@@ -7,8 +7,6 @@ import styles from "./HeroSection.module.css";
 
 const CinematicLayer = dynamic(() => import("./CinematicLayer"), { ssr: false });
 
-let globalMuted = true;
-
 export default function HeroSection() {
   const taglineRef   = useRef<HTMLSpanElement>(null);
   const firstNameRef = useRef<HTMLHeadingElement>(null);
@@ -16,43 +14,37 @@ export default function HeroSection() {
   const roleRef      = useRef<HTMLParagraphElement>(null);
   const ctaRef       = useRef<HTMLDivElement>(null);
   const scrollRef    = useRef<HTMLButtonElement>(null);
-  const sectionRef   = useRef<HTMLElement>(null);
 
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isMuted, setIsMuted] = useState(globalMuted);
+  const [isMuted, setIsMuted]         = useState(true);f
+  const [isPlaying, setIsPlaying]     = useState(false);
+  const [showSoundHint, setShowHint]  = useState(true);
+
+  // Refs to the actual <video> DOM nodes (injected via dangerouslySetInnerHTML)
+  const fgWrapRef = useRef<HTMLDivElement>(null);
+  const bgWrapRef = useRef<HTMLDivElement>(null);
+  const fgVid     = useRef<HTMLVideoElement | null>(null);
+  const bgVid     = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
-    const v = videoRef.current;
-    const section = sectionRef.current;
-    if (!v || !section) return;
+    // Grab the real DOM video nodes — bypasses React's broken muted prop
+    fgVid.current = fgWrapRef.current?.querySelector("video") ?? null;
+    bgVid.current = bgWrapRef.current?.querySelector("video") ?? null;
 
-    v.volume = 1;
-    v.muted  = true;
-    v.play().then(() => {
-      v.muted  = globalMuted;
-      v.volume = 1;
-    }).catch(() => {});
+    const play = async (v: HTMLVideoElement | null) => {
+      if (!v) return;
+      v.muted = true;
+      v.loop  = true;
+      try { await v.play(); } catch { /* blocked — user must tap */ }
+    };
 
-    // Watch the SECTION — pause audio when scrolled away, resume when back
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          // Back on hero — restore saved mute state
-          v.muted  = globalMuted;
-          v.volume = 1;
-          setIsMuted(globalMuted);
-        } else {
-          // Scrolled away — mute the audio (video keeps playing visually off-screen)
-          v.muted = true;
-        }
-      },
-      { threshold: 0.3 }
-    );
+    play(fgVid.current).then(() => setIsPlaying(true)).catch(() => {});
+    play(bgVid.current);
 
-    observer.observe(section);
-    return () => observer.disconnect();
+    const t = setTimeout(() => setShowHint(false), 4500);
+    return () => clearTimeout(t);
   }, []);
 
+  // GSAP entrance
   useEffect(() => {
     gsap.timeline({ delay: 0.3 })
       .fromTo(taglineRef.current,   { opacity:0, y:20 },           { opacity:1, y:0, duration:1.0, ease:"power3.out" })
@@ -63,37 +55,74 @@ export default function HeroSection() {
       .fromTo(scrollRef.current,    { opacity:0 },                 { opacity:1, duration:0.6 }, "-=0.2");
   }, []);
 
-  const handleUnmute = () => {
-    const v = videoRef.current;
-    if (!v) return;
-    const nowMuted = !isMuted;
-    v.muted     = nowMuted;
-    v.volume    = 1;
-    globalMuted = nowMuted;
-    setIsMuted(nowMuted);
+  const toggleMute = () => {
+    if (!fgVid.current) return;
+    fgVid.current.muted = !isMuted;
+    setIsMuted(m => !m);
+    setShowHint(false);
   };
 
-  return (
-    <section ref={sectionRef} className={styles.hero}>
+  const togglePlay = () => {
+    const v = fgVid.current;
+    const b = bgVid.current;
+    if (!v) return;
+    if (isPlaying) {
+      v.pause(); b?.pause();
+      setIsPlaying(false);
+    } else {
+      v.muted = true;
+      v.play().then(() => setIsPlaying(true)).catch(console.warn);
+      b?.play().catch(console.warn);
+    }
+  };
 
+  // Raw HTML string — this is the ONLY reliable way to get muted autoplay in React/Next.js
+  const videoHTML = `<video
+    autoplay
+    loop
+    muted
+    playsinline
+    preload="auto"
+    style="width:100%;height:100%;object-fit:cover;"
+  >
+    <source src="/hero.mp4" type="video/mp4" />
+  </video>`;
+
+  return (
+    <section className={styles.hero}>
+
+      {/* BG blurred video — raw HTML injection */}
       <div className={styles.bgVideoWrap}>
-        <video
-          ref={videoRef}
-          className={styles.bgVideo}
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="auto"
-        >
-          <source src="/hero-video.mp4" type="video/mp4" />
-        </video>
+        <div
+          ref={bgWrapRef}
+          dangerouslySetInnerHTML={{ __html: videoHTML }}
+          className={styles.bgVideoInner}
+        />
         <div className={styles.bgBlur} />
       </div>
 
       <div className={styles.gradientOverlay} />
       <CinematicLayer />
 
+      {/* FG portrait video — raw HTML injection */}
+      <div className={styles.videoPortrait}>
+        <div
+          ref={fgWrapRef}
+          dangerouslySetInnerHTML={{ __html: videoHTML }}
+          className={styles.fgVideoInner}
+        />
+        {!isPlaying && (
+          <button className={styles.manualPlay} onClick={togglePlay} aria-label="Play video">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+              <polygon points="5,3 19,12 5,21" />
+            </svg>
+          </button>
+        )}
+        <div className={styles.videoGlow} />
+        <div className={styles.videoVignette} />
+      </div>
+
+      {/* Text */}
       <div className={styles.content}>
         <span ref={taglineRef} className={styles.tagline}>
           IT Infrastructure · DevOps · Networks
@@ -119,37 +148,30 @@ export default function HeroSection() {
         </div>
       </div>
 
-      <button
-        className={`${styles.muteBtn} ${isMuted ? styles.muteBtnMuted : styles.muteBtnOn}`}
-        onClick={handleUnmute}
-        aria-label={isMuted ? "Unmute" : "Mute"}
-      >
-        {isMuted ? (
-          <>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <polygon points="11,5 6,9 2,9 2,15 6,15 11,19" fill="currentColor" stroke="none"/>
-              <line x1="23" y1="9" x2="17" y2="15"/>
-              <line x1="17" y1="9" x2="23" y2="15"/>
-            </svg>
-            Tap for sound
-          </>
-        ) : (
-          <>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <polygon points="11,5 6,9 2,9 2,15 6,15 11,19" fill="currentColor" stroke="none"/>
-              <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
-            </svg>
-            Sound on
-          </>
-        )}
-      </button>
+      {/* Controls */}
+      <div className={styles.controls}>
+        <button className={styles.controlBtn} onClick={togglePlay} aria-label={isPlaying ? "Pause" : "Play"}>
+          {isPlaying
+            ? <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            : <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+          }
+        </button>
+        <button className={styles.controlBtn} onClick={toggleMute} aria-label={isMuted ? "Unmute" : "Mute"}>
+          {isMuted
+            ? <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="11,5 6,9 2,9 2,15 6,15 11,19" fill="currentColor" stroke="none"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+            : <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="11,5 6,9 2,9 2,15 6,15 11,19" fill="currentColor" stroke="none"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+          }
+        </button>
+      </div>
 
-      <button
-        ref={scrollRef}
-        className={styles.scrollIndicator}
-        onClick={() => document.getElementById("about")?.scrollIntoView({ behavior:"smooth" })}
-        aria-label="Scroll down"
-      >
+      {showSoundHint && isPlaying && (
+        <div className={styles.soundHint} onClick={toggleMute}>
+          <span className={styles.soundDot} />
+          Tap for sound
+        </div>
+      )}
+
+      <button ref={scrollRef} className={styles.scrollIndicator} onClick={() => document.getElementById("about")?.scrollIntoView({ behavior:"smooth" })} aria-label="Scroll down">
         <span className={styles.scrollLabel}>scroll</span>
         <div className={styles.scrollLine}><div className={styles.scrollPulse} /></div>
       </button>
