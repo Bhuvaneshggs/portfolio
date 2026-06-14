@@ -15,8 +15,7 @@ export default function HeroSection() {
   const ctaRef       = useRef<HTMLDivElement>(null);
   const scrollRef    = useRef<HTMLButtonElement>(null);
 
-  const [showSoundHint, setShowHint] = useState(true);
-
+  const [isMuted, setIsMuted] = useState(true);
   const bgWrapRef = useRef<HTMLDivElement>(null);
   const bgVid     = useRef<HTMLVideoElement | null>(null);
 
@@ -24,27 +23,10 @@ export default function HeroSection() {
     bgVid.current = bgWrapRef.current?.querySelector("video") ?? null;
     const v = bgVid.current;
     if (!v) return;
-
     v.muted  = true;
-    v.loop   = true;
     v.volume = 1;
+    v.loop   = true;
     v.play().catch(() => {});
-
-    // First click anywhere on page → unmute + full volume
-    const unlock = () => {
-      if (!bgVid.current) return;
-      bgVid.current.muted  = false;
-      bgVid.current.volume = 1;
-      setShowHint(false);
-      document.removeEventListener("click", unlock);
-    };
-    document.addEventListener("click", unlock);
-
-    const t = setTimeout(() => setShowHint(false), 7000);
-    return () => {
-      clearTimeout(t);
-      document.removeEventListener("click", unlock);
-    };
   }, []);
 
   // GSAP entrance
@@ -57,6 +39,20 @@ export default function HeroSection() {
       .fromTo(ctaRef.current,       { opacity:0, y:20 },           { opacity:1, y:0, duration:0.8, ease:"power2.out" }, "-=0.4")
       .fromTo(scrollRef.current,    { opacity:0 },                 { opacity:1, duration:0.6 }, "-=0.2");
   }, []);
+
+  // This MUST be called directly from a button onClick — no async, no setTimeout
+  const handleUnmute = () => {
+    const v = bgVid.current;
+    if (!v) return;
+    if (isMuted) {
+      v.muted  = false;
+      v.volume = 1;
+      setIsMuted(false);
+    } else {
+      v.muted = true;
+      setIsMuted(true);
+    }
+  };
 
   const videoHTML = `<video
     autoplay
@@ -72,7 +68,6 @@ export default function HeroSection() {
   return (
     <section className={styles.hero}>
 
-      {/* Full-screen background video */}
       <div className={styles.bgVideoWrap}>
         <div
           ref={bgWrapRef}
@@ -85,7 +80,6 @@ export default function HeroSection() {
       <div className={styles.gradientOverlay} />
       <CinematicLayer />
 
-      {/* Text */}
       <div className={styles.content}>
         <span ref={taglineRef} className={styles.tagline}>
           IT Infrastructure · DevOps · Networks
@@ -111,15 +105,38 @@ export default function HeroSection() {
         </div>
       </div>
 
-      {/* Sound hint — disappears on first click */}
-      {showSoundHint && (
-        <div className={styles.soundHint}>
-          <span className={styles.soundDot} />
-          Click anywhere for sound
-        </div>
-      )}
+      {/* Mute toggle — must be a real button the user taps directly */}
+      <button
+        className={`${styles.muteBtn} ${isMuted ? styles.muteBtnMuted : ""}`}
+        onClick={handleUnmute}
+        aria-label={isMuted ? "Unmute video" : "Mute video"}
+      >
+        {isMuted ? (
+          <>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polygon points="11,5 6,9 2,9 2,15 6,15 11,19" fill="currentColor" stroke="none"/>
+              <line x1="23" y1="9" x2="17" y2="15"/>
+              <line x1="17" y1="9" x2="23" y2="15"/>
+            </svg>
+            <span>Tap for sound</span>
+          </>
+        ) : (
+          <>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polygon points="11,5 6,9 2,9 2,15 6,15 11,19" fill="currentColor" stroke="none"/>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+            </svg>
+            <span>Sound on</span>
+          </>
+        )}
+      </button>
 
-      <button ref={scrollRef} className={styles.scrollIndicator} onClick={() => document.getElementById("about")?.scrollIntoView({ behavior:"smooth" })} aria-label="Scroll down">
+      <button
+        ref={scrollRef}
+        className={styles.scrollIndicator}
+        onClick={() => document.getElementById("about")?.scrollIntoView({ behavior:"smooth" })}
+        aria-label="Scroll down"
+      >
         <span className={styles.scrollLabel}>scroll</span>
         <div className={styles.scrollLine}><div className={styles.scrollPulse} /></div>
       </button>
