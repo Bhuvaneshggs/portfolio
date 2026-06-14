@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
-import { google } from "googleapis";
 
-const CLIENT_ID     = process.env.GMAIL_CLIENT_ID!;
-const CLIENT_SECRET = process.env.GMAIL_CLIENT_SECRET!;
-const REFRESH_TOKEN = process.env.GMAIL_REFRESH_TOKEN!;
-const MY_EMAIL      = "bhuvanesh2228895@gmail.com";
+const MY_EMAIL     = "bhuvanesh2228895@gmail.com";
+const APP_PASSWORD = process.env.GMAIL_APP_PASSWORD!;
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,24 +12,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "All fields are required." }, { status: 400 });
     }
 
-    // Get fresh access token
-    const oAuth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, "https://developers.google.com/oauthplayground");
-    oAuth2Client.setCredentials({ refresh_token: REFRESH_TOKEN });
-    const { token: accessToken } = await oAuth2Client.getAccessToken();
-
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        type: "OAuth2",
-        user: MY_EMAIL,
-        clientId: CLIENT_ID,
-        clientSecret: CLIENT_SECRET,
-        refreshToken: REFRESH_TOKEN,
-        accessToken: accessToken!,
+        user: bhuvanesh2228895@gmail.com,
+        pass: eidu bzle scub keaa
+,
       },
-    } as any);
+    });
 
-    // ── Mail to the user (thank you) ──
     await transporter.sendMail({
       from: `"Bhuvanesh Gopal" <${MY_EMAIL}>`,
       to: email,
