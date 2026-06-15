@@ -1,17 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import dynamic from "next/dynamic";
 import styles from "./HeroSection.module.css";
 
-/* Three.js layer loaded only client-side */
 const CinematicLayer = dynamic(() => import("./CinematicLayer"), { ssr: false });
 
-/* Persist mute preference across navigations */
-let globalMuted = true;
-
-/* ── Social links ─────────────────────────────────────────────────── */
 const SOCIALS = [
   {
     label: "LinkedIn",
@@ -79,301 +74,128 @@ const SOCIALS = [
   },
 ];
 
-/* ── SVG Icons ─────────────────────────────────────────────────────── */
-const PlayIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-    <polygon points="5,3 19,12 5,21"/>
-  </svg>
-);
-const PauseIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-    <rect x="6"  y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>
-  </svg>
-);
-const MuteIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-    <polygon points="11,5 6,9 2,9 2,15 6,15 11,19" fill="currentColor" stroke="none"/>
-    <line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>
-  </svg>
-);
-const VolumeIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-    <polygon points="11,5 6,9 2,9 2,15 6,15 11,19" fill="currentColor" stroke="none"/>
-    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
-  </svg>
-);
-
-/* ═══════════════════════════════════════════════════════════════════
-   HeroSection component
-═══════════════════════════════════════════════════════════════════ */
 export default function HeroSection() {
-  /* Refs — DOM */
-  const sectionRef    = useRef<HTMLElement>(null);
-  const fgVideoRef    = useRef<HTMLVideoElement>(null);
-  const bgVideoRef    = useRef<HTMLVideoElement>(null);
-  const taglineRef    = useRef<HTMLSpanElement>(null);
-  const firstNameRef  = useRef<HTMLHeadingElement>(null);
-  const lastNameRef   = useRef<HTMLHeadingElement>(null);
-  const roleRef       = useRef<HTMLParagraphElement>(null);
-  const ctaRef        = useRef<HTMLDivElement>(null);
-  const socialsRef    = useRef<HTMLDivElement>(null);
-  const scrollRef     = useRef<HTMLButtonElement>(null);
-  const controlsRef   = useRef<HTMLDivElement>(null);
+  const sectionRef   = useRef<HTMLElement>(null);
+  const fgVideoRef   = useRef<HTMLVideoElement>(null);
+  const bgVideoRef   = useRef<HTMLVideoElement>(null);
+  const taglineRef   = useRef<HTMLSpanElement>(null);
+  const firstNameRef = useRef<HTMLHeadingElement>(null);
+  const lastNameRef  = useRef<HTMLHeadingElement>(null);
+  const roleRef      = useRef<HTMLParagraphElement>(null);
+  const ctaRef       = useRef<HTMLDivElement>(null);
+  const socialsRef   = useRef<HTMLDivElement>(null);
+  const scrollRef    = useRef<HTMLButtonElement>(null);
 
-  /* State */
-  const [isMuted,   setIsMuted]   = useState(globalMuted);
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [hintHidden, setHintHidden] = useState(false);
-
-  /* ── Video setup ─────────────────────────────────────────────── */
+  /* ── Video: bg always muted, fg always muted (no audio) ── */
   useEffect(() => {
     const fg = fgVideoRef.current;
     const bg = bgVideoRef.current;
-    if (!fg) return;
 
-    /* Start muted (browser requirement), then apply persisted state */
     const tryPlay = (v: HTMLVideoElement) => {
-      v.muted  = true;
-      v.volume = 1;
-      return v.play().then(() => {
-        v.muted = globalMuted;
-      }).catch(() => {});
+      v.muted  = true; // always muted — no audio on either layer
+      v.volume = 0;
+      v.play().catch(() => {});
     };
 
-    tryPlay(fg);
+    if (fg) tryPlay(fg);
     if (bg) tryPlay(bg);
 
-    /* Sync ambient bg video with foreground */
-    const syncBg = () => {
-      if (!bg || !fg) return;
-      bg.currentTime = fg.currentTime;
-    };
-    fg.addEventListener("seeked", syncBg);
-
-    /* Pause/resume on viewport exit (save CPU) */
-    const section = sectionRef.current;
+    /* Pause both videos when section leaves viewport (save CPU) */
     const observer = new IntersectionObserver(
       ([entry]) => {
-        const visible = entry.isIntersecting;
-        if (visible) {
-          fg.muted  = globalMuted;
-          fg.volume = 1;
-          setIsMuted(globalMuted);
-          if (!fg.paused) setIsPlaying(true);
+        if (entry.isIntersecting) {
+          fg?.play().catch(() => {});
+          bg?.play().catch(() => {});
         } else {
-          fg.muted = true;
-          if (bg) bg.muted = true;
+          fg?.pause();
+          bg?.pause();
         }
       },
       { threshold: 0.25 },
     );
-    if (section) observer.observe(section);
+    if (sectionRef.current) observer.observe(sectionRef.current);
 
-    /* Auto-hide the sound hint after 4 s */
-    const hintTimer = setTimeout(() => setHintHidden(true), 4000);
-
-    return () => {
-      observer.disconnect();
-      clearTimeout(hintTimer);
-      fg.removeEventListener("seeked", syncBg);
-    };
+    return () => observer.disconnect();
   }, []);
 
-  /* ── GSAP entrance animation ─────────────────────────────────── */
+  /* ── GSAP entrance timeline ── */
   useEffect(() => {
-    const tl = gsap.timeline({ delay: 0.5 });
-
-    /* Controls dock fades in first */
-    tl.fromTo(
-      controlsRef.current,
-      { opacity: 0, y: -12 },
-      { opacity: 1, y: 0, duration: 0.9, ease: "power3.out" },
-    );
-
-    /* Tagline */
-    tl.fromTo(
-      taglineRef.current,
-      { opacity: 0, y: 22, filter: "blur(8px)" },
-      { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.0, ease: "power3.out" },
-      "-=0.5",
-    );
-
-    /* Names — cinematic slide from below with skew */
-    tl.fromTo(
-      firstNameRef.current,
-      { opacity: 0, y: 100, skewY: 5 },
-      { opacity: 1, y: 0, skewY: 0, duration: 1.4, ease: "expo.out" },
-      "-=0.55",
-    );
-    tl.fromTo(
-      lastNameRef.current,
-      { opacity: 0, y: 100, skewY: -5 },
-      { opacity: 1, y: 0, skewY: 0, duration: 1.4, ease: "expo.out" },
-      "-=1.1",
-    );
-
-    /* Role + CTA + Socials cascade */
-    tl.fromTo(
-      roleRef.current,
-      { opacity: 0, y: 30, filter: "blur(4px)" },
-      { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.0, ease: "power2.out" },
-      "-=0.6",
-    );
-    tl.fromTo(
-      ctaRef.current,
-      { opacity: 0, y: 22 },
-      { opacity: 1, y: 0, duration: 0.85, ease: "power2.out" },
-      "-=0.5",
-    );
-    tl.fromTo(
-      socialsRef.current,
-      { opacity: 0, y: 14 },
-      { opacity: 1, y: 0, duration: 0.75, ease: "power2.out" },
-      "-=0.4",
-    );
-    tl.fromTo(
-      scrollRef.current,
-      { opacity: 0 },
-      { opacity: 0.7, duration: 0.7 },
-      "-=0.3",
-    );
+    gsap.timeline({ delay: 0.4 })
+      .fromTo(taglineRef.current,
+        { opacity: 0, y: 18, filter: "blur(6px)" },
+        { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.0, ease: "power3.out" })
+      .fromTo(firstNameRef.current,
+        { opacity: 0, y: 60 },
+        { opacity: 1, y: 0, duration: 1.2, ease: "expo.out" }, "-=0.5")
+      .fromTo(lastNameRef.current,
+        { opacity: 0, y: 60 },
+        { opacity: 1, y: 0, duration: 1.2, ease: "expo.out" }, "-=0.9")
+      .fromTo(roleRef.current,
+        { opacity: 0, y: 24, filter: "blur(4px)" },
+        { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.95, ease: "power2.out" }, "-=0.5")
+      .fromTo(ctaRef.current,
+        { opacity: 0, y: 18 },
+        { opacity: 1, y: 0, duration: 0.85, ease: "power2.out" }, "-=0.45")
+      .fromTo(socialsRef.current,
+        { opacity: 0, y: 12 },
+        { opacity: 1, y: 0, duration: 0.75, ease: "power2.out" }, "-=0.35")
+      .fromTo(scrollRef.current,
+        { opacity: 0 },
+        { opacity: 0.7, duration: 0.7 }, "-=0.25");
   }, []);
 
-  /* ── Controls ─────────────────────────────────────────────────── */
-  const toggleMute = () => {
-    const fg = fgVideoRef.current;
-    const bg = bgVideoRef.current;
-    if (!fg) return;
-    const nowMuted = !isMuted;
-    fg.muted = nowMuted;
-    fg.volume = 1;
-    if (bg) { bg.muted = nowMuted; bg.volume = 1; }
-    globalMuted = nowMuted;
-    setIsMuted(nowMuted);
-    setHintHidden(true); // hide hint once user interacts
-  };
-
-  const togglePlay = () => {
-    const fg = fgVideoRef.current;
-    const bg = bgVideoRef.current;
-    if (!fg) return;
-    if (fg.paused) {
-      fg.play();
-      if (bg) bg.play();
-      setIsPlaying(true);
-    } else {
-      fg.pause();
-      if (bg) bg.pause();
-      setIsPlaying(false);
-    }
-  };
-
-  const scrollToNext = () => {
-    document.getElementById("about")?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  /* ── Render ───────────────────────────────────────────────────── */
   return (
     <section ref={sectionRef} className={styles.hero}>
 
-      {/* ── Ambient blurred background (duplicate video) ── */}
+      {/* Ambient blurred background — always muted */}
       <div className={styles.bgAmbient}>
         <video
           ref={bgVideoRef}
           className={styles.bgAmbientVideo}
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="auto"
-          aria-hidden="true"
-          tabIndex={-1}
+          autoPlay loop muted playsInline preload="auto"
+          aria-hidden="true" tabIndex={-1}
         >
           <source src="/hero-video.mp4" type="video/mp4" />
         </video>
       </div>
 
-      {/* ── Foreground talking-head video ── */}
+      {/* Foreground talking-head — always muted */}
       <div className={styles.fgVideoWrap}>
         <video
           ref={fgVideoRef}
           className={styles.fgVideo}
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="auto"
+          autoPlay loop muted playsInline preload="auto"
         >
           <source src="/hero-video.mp4" type="video/mp4" />
         </video>
       </div>
 
-      {/* ── Cinematic gradient overlays ── */}
       <div className={styles.gradientOverlay} />
-
-      {/* ── Three.js bokeh/particle layer ── */}
       <CinematicLayer />
 
-      {/* ── Glassmorphism control dock (top-right) ── */}
-      <div ref={controlsRef} className={styles.controlsDock} style={{ opacity: 0 }}>
-        <button
-          className={styles.glassBtn}
-          onClick={togglePlay}
-          aria-label={isPlaying ? "Pause video" : "Play video"}
-          title={isPlaying ? "Pause" : "Play"}
-        >
-          {isPlaying ? <PauseIcon /> : <PlayIcon />}
-        </button>
-        <button
-          className={styles.glassBtn}
-          onClick={toggleMute}
-          aria-label={isMuted ? "Unmute video" : "Mute video"}
-          title={isMuted ? "Unmute" : "Mute"}
-        >
-          {isMuted ? <MuteIcon /> : <VolumeIcon />}
-        </button>
-      </div>
-
-      {/* ── Animated "Tap for sound" badge ── */}
-      <button
-        className={`${styles.soundHint} ${hintHidden || !isMuted ? styles.soundHintHidden : ""}`}
-        onClick={toggleMute}
-        aria-label="Tap for sound"
-      >
-        <span className={styles.soundHintDot} />
-        Tap for sound
-      </button>
-
-      {/* ── Landing content ── */}
+      {/* Landing content */}
       <div className={styles.content}>
-
         <span ref={taglineRef} className={styles.tagline} style={{ opacity: 0 }}>
           <span className={styles.taglineDot} />
           IT Infrastructure · DevOps · Networks
         </span>
 
         <div className={styles.nameWrap}>
-          <h1 ref={firstNameRef} className={styles.name} style={{ opacity: 0 }}>
-            BHUVANESH
-          </h1>
+          <h1 ref={firstNameRef} className={styles.name} style={{ opacity: 0 }}>BHUVANESH</h1>
         </div>
         <div className={styles.nameWrap}>
-          <h1 ref={lastNameRef} className={styles.name} style={{ opacity: 0 }}>
-            GOPAL
-          </h1>
+          <h1 ref={lastNameRef} className={styles.name} style={{ opacity: 0 }}>GOPAL</h1>
         </div>
 
         <p ref={roleRef} className={styles.role} style={{ opacity: 0 }}>
           IT Engineer &amp; DevOps Practitioner
           <br />
-          <span className={styles.roleDetail}>
-            AWS · Docker · Kubernetes · Terraform · CI/CD
-          </span>
+          <span className={styles.roleDetail}>AWS · Docker · Kubernetes · Terraform · CI/CD</span>
         </p>
 
         <div ref={ctaRef} className={styles.cta} style={{ opacity: 0 }}>
-          <a href="#contact"   className={styles.ctaPrimary}>Get in touch</a>
-          <a href="#projects"  className={styles.ctaSecondary}>View work ↓</a>
+          <a href="#contact"  className={styles.ctaPrimary}>Get in touch</a>
+          <a href="#projects" className={styles.ctaSecondary}>View work ↓</a>
           <a
             href="/Bhuvanesh Gopal Resume.pdf"
             download="Bhuvanesh Gopal Resume.pdf"
@@ -405,11 +227,11 @@ export default function HeroSection() {
         </div>
       </div>
 
-      {/* ── Scroll indicator ── */}
+      {/* Scroll indicator */}
       <button
         ref={scrollRef}
         className={styles.scrollIndicator}
-        onClick={scrollToNext}
+        onClick={() => document.getElementById("about")?.scrollIntoView({ behavior: "smooth" })}
         aria-label="Scroll to next section"
         style={{ opacity: 0 }}
       >
