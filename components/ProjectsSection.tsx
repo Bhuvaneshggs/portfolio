@@ -1,134 +1,183 @@
-"use client";
+/* ══════════════════════════════════════════════
+   ProjectsSection — 3D sticky-stack with GSAP
+══════════════════════════════════════════════ */
 
-import { useEffect, useRef } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import FadeIn from "./FadeIn";
-import styles from "./ProjectsSection.module.css";
+.section {
+  background: var(--black);
+  padding: 8rem 6vw 20rem;
+  position: relative;
+}
 
-gsap.registerPlugin(ScrollTrigger);
+.section::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--orange-dim), transparent);
+}
 
-const projects = [
-  {
-    id: "01",
-    title: "Android Malware Detector API",
-    tech: ["Python", "Androguard", "CatBoost", "Blockchain", "REST API"],
-    desc: "Built a machine-learning API that analyzes Android APKs for malware signatures using Androguard for static analysis and CatBoost for classification, integrated into a blockchain domain for immutable threat logging.",
-    type: "Research Project",
-    year: "2024",
-  },
-  {
-    id: "02",
-    title: "Multi-Site IT Infrastructure",
-    tech: ["Cisco", "Firewalls", "Windows Server", "Active Directory", "NAS"],
-    desc: "Designed and currently managing the entire IT infrastructure for Lanson Toyota across 5+ locations — including unified AD, secure NAS storage, centralized firewall policies, and Toyota CTDMS integration.",
-    type: "Professional",
-    year: "2024–Present",
-  },
-  {
-    id: "03",
-    title: "DevOps Pipeline (In Progress)",
-    tech: ["AWS", "Docker", "Kubernetes", "Terraform", "Jenkins", "GitHub Actions"],
-    desc: "Personal DevOps lab environment — provisioning AWS infrastructure with Terraform, containerizing services with Docker, orchestrating with Kubernetes, and automating deployments through Jenkins CI/CD pipelines.",
-    type: "Personal Lab",
-    year: "2026",
-  },
-];
+.inner    { max-width: 900px; margin: 0 auto; }
+.header   { margin-bottom: 4rem; }
 
-/* How far each card is offset when stacked */
-const STACK_OFFSET = 18; // px from top per card
+.eyebrow {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--orange);
+  margin-bottom: 0.8rem;
+}
 
-export default function ProjectsSection() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const cardRefs   = useRef<(HTMLDivElement | null)[]>([]);
+.heading {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(3rem, 6vw, 5rem);
+  line-height: 1;
+  color: var(--white);
+}
 
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      cardRefs.current.forEach((card, i) => {
-        if (!card) return;
+/* ── Stack container ── */
+.stack {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0;          /* gap is handled by sticky top offsets */
+  /* tall enough to let cards travel through */
+  padding-bottom: 4rem;
+}
 
-        /* Each card except the last scales down + dims as the next card scrolls over it */
-        if (i < projects.length - 1) {
-          gsap.to(card, {
-            scale:   0.94 - i * 0.02,
-            opacity: 0.55,
-            filter:  "brightness(0.6)",
-            ease:    "none",
-            scrollTrigger: {
-              trigger:  cardRefs.current[i + 1], // triggered when the NEXT card arrives
-              start:    "top 65%",
-              end:      "top 20%",
-              scrub:    true,
-            },
-          });
-        }
+/* ── Individual card ── */
+.card {
+  position: sticky;
+  /* top is set inline per card: 18px, 36px, 54px */
+  background: rgba(13,13,13,0.92);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 10px;
+  padding: 2.5rem;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  margin-bottom: 1.5rem;
+  transform-origin: center top;   /* scale shrinks from top-center */
+  will-change: transform, opacity, filter;
+  overflow: hidden;
+  transition: border-color 0.3s;
+}
 
-        /* Entrance: each card fades + slides up when it first enters viewport */
-        gsap.fromTo(
-          card,
-          { opacity: 0, y: 50 },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.9,
-            ease: "power3.out",
-            scrollTrigger: {
-              trigger: card,
-              start:   "top 85%",
-              toggleActions: "play none none none",
-            },
-          },
-        );
-      });
-    }, sectionRef);
+.card:hover {
+  border-color: rgba(232,112,42,0.25);
+}
 
-    return () => ctx.revert();
-  }, []);
+/* Left accent bar */
+.card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--orange) 0%, transparent 100%);
+  border-radius: 10px 0 0 10px;
+  opacity: 0.6;
+}
 
-  return (
-    <section ref={sectionRef} id="projects" className={styles.section}>
-      <div className={styles.inner}>
-        <FadeIn>
-          <div className={styles.header}>
-            <span className={styles.eyebrow}>Projects</span>
-            <h2 className={styles.heading}>Selected Work</h2>
-          </div>
-        </FadeIn>
+/* Large watermark number */
+.cardWatermark {
+  position: absolute;
+  right: 2rem;
+  bottom: 1.2rem;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 5rem;
+  color: rgba(255,255,255,0.03);
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
 
-        <div className={styles.stack}>
-          {projects.map((p, i) => (
-            <div
-              key={p.id}
-              ref={(el) => { cardRefs.current[i] = el; }}
-              className={styles.card}
-              style={{
-                top:    `${STACK_OFFSET + i * STACK_OFFSET}px`,
-                zIndex: i + 1,
-              }}
-            >
-              <div className={styles.cardMeta}>
-                <span className={styles.cardId}>{p.id}</span>
-                <div className={styles.cardRight}>
-                  <span className={styles.cardType}>{p.type}</span>
-                  <span className={styles.cardYear}>{p.year}</span>
-                </div>
-              </div>
+/* ── Card internals ── */
+.cardMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.4rem;
+}
 
-              <h3 className={styles.cardTitle}>{p.title}</h3>
-              <p className={styles.cardDesc}>{p.desc}</p>
+.cardId {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.15em;
+  color: var(--orange);
+}
 
-              <div className={styles.techWrap}>
-                {p.tech.map((t, ti) => (
-                  <span key={ti} className={styles.tag}>{t}</span>
-                ))}
-              </div>
+.cardRight {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
 
-              {/* subtle card number watermark */}
-              <span className={styles.cardWatermark}>{p.id}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
+.cardType {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--white-dim);
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  padding: 0.2rem 0.6rem;
+  border-radius: 100px;
+}
+
+.cardYear {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--white-dim);
+}
+
+.cardTitle {
+  font-size: clamp(1.4rem, 2.5vw, 1.9rem);
+  font-weight: 600;
+  color: var(--white);
+  margin-bottom: 0.9rem;
+  line-height: 1.2;
+}
+
+.cardDesc {
+  font-size: 0.92rem;
+  line-height: 1.8;
+  color: var(--white-dim);
+  margin-bottom: 1.5rem;
+  max-width: 680px;
+}
+
+.techWrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+  color: var(--orange-light);
+  background: rgba(232,112,42,0.08);
+  border: 1px solid rgba(232,112,42,0.18);
+  padding: 0.25rem 0.65rem;
+  border-radius: 3px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .section { padding: 5rem 5vw 10rem; }
+  /* Disable sticky stacking on mobile — just normal flow */
+  .card {
+    position: relative !important;
+    top: 0 !important;
+    margin-bottom: 1.2rem;
+  }
+  .stack { gap: 0; }
+}
+
+@media (max-width: 480px) {
+  .section { padding: 4rem 4vw 8rem; }
+  .card    { padding: 1.5rem; }
+  .cardMeta { flex-direction: column; align-items: flex-start; gap: 0.4rem; }
+  .cardWatermark { font-size: 3.5rem; }
 }
