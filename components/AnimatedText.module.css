@@ -1,0 +1,11 @@
+.char {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.45s ease, transform 0.45s ease;
+}
+
+.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
