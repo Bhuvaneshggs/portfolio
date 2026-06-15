@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 
-const MY_EMAIL     = "bhuvanesh2228895@gmail.com";
-const APP_PASSWORD = process.env.GMAIL_APP_PASSWORD!;
+const MY_EMAIL = "bhuvanesh2228895@gmail.com";
 
 export async function POST(req: NextRequest) {
+  console.log("APP_PASSWORD set:", !!process.env.GMAIL_APP_PASSWORD);
   try {
     const { name, phone, email, message } = await req.json();
 
@@ -12,14 +12,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "All fields are required." }, { status: 400 });
     }
 
-  const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.GMAIL_USER!,
-    pass: process.env.GMAIL_APP_PASSWORD!,
-  },
-});
-
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: MY_EMAIL,
+        pass: process.env.GMAIL_APP_PASSWORD!,
+      },
+    });
 
     await transporter.sendMail({
       from: `"Bhuvanesh Gopal" <${MY_EMAIL}>`,
