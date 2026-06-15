@@ -41,9 +41,8 @@
 .content {
   position: relative;
   z-index: 4;
-  padding: 0 6vw 0 6vw;
-  margin-top: -10vh;
-  max-width: 100%;
+  padding: 5rem 6vw 8rem 6vw;
+  max-width: 55%;
   width: 100%;
   box-sizing: border-box;
 }
@@ -264,12 +263,20 @@
 /* ---- Tablet ---- */
 @media (max-width: 768px) {
   .content {
-    padding: 0 5vw;
-    margin-top: -8vh;
+    padding: 4rem 5vw 9rem 5vw;
     max-width: 100%;
   }
   .name { font-size: clamp(3rem, 13vw, 5.5rem); }
-  .cta { gap: 0.6rem; }
+  .cta {
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+  .ctaPrimary, .ctaSecondary, .ctaResume {
+    flex: 1 1 auto;
+    min-width: 120px;
+    text-align: center;
+    justify-content: center;
+  }
   .muteBtn {
     bottom: 4.5rem;
     right: 1rem;
@@ -280,16 +287,17 @@
 
 /* ---- Small mobile (≤380px) ---- */
 @media (max-width: 380px) {
-  .content { padding: 0 4vw; margin-top: -6vh; }
+  .content { padding: 3.5rem 4vw 8.5rem 4vw; margin-top: 0; }
   .name { font-size: clamp(2.8rem, 14vw, 4rem); }
   .tagline { font-size: 0.55rem; letter-spacing: 0.15em; }
   .role { font-size: 0.85rem; }
-  .cta { flex-direction: column; gap: 0.5rem; }
+  .cta { flex-direction: row; flex-wrap: wrap; gap: 0.5rem; }
   .ctaPrimary, .ctaSecondary, .ctaResume {
-    width: 100%;
+    flex: 1 1 auto;
+    min-width: 100px;
     justify-content: center;
     text-align: center;
-    padding: 0.8rem 1rem;
+    padding: 0.75rem 0.8rem;
   }
   .muteBtn {
     bottom: 4rem;
