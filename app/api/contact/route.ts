@@ -1,33 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
-import { create } from "@open-wa/wa-automate";
 
-const MY_EMAIL = "bhuvanesh2228895@gmail.com";
+const MY_EMAIL     = "bhuvanesh2228895@gmail.com";
 const APP_PASSWORD = process.env.GMAIL_APP_PASSWORD!;
-
-let waClient: any;
-
-// WhatsApp Connection
-create({
-  sessionId: "portfolio-bot",
-  multiDevice: true,
-}).then((client) => {
-  waClient = client;
-  console.log("WhatsApp Connected");
-});
 
 export async function POST(req: NextRequest) {
   try {
     const { name, phone, email, message } = await req.json();
 
     if (!name || !phone || !email || !message) {
-      return NextResponse.json(
-        { error: "All fields are required." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "All fields are required." }, { status: 400 });
     }
 
-    // Mail Transporter
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -36,11 +20,10 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Send Email
-await transporter.sendMail({
+    await transporter.sendMail({
       from: `"Bhuvanesh Gopal" <${MY_EMAIL}>`,
       to: email,
-      bcc: MY_EMAIL,
+      cc: MY_EMAIL,
       subject: "Thank you for contacting Bhuvanesh Gopal",
       html: `
         <div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#080808;color:#f5f0ea;border-radius:8px;overflow:hidden;">
@@ -74,32 +57,9 @@ await transporter.sendMail({
       `,
     });
 
-    // WhatsApp Greeting Message
-    const whatsappNumber = phone.startsWith("91")
-      ? `${phone}@c.us`
-      : `91${phone}@c.us`;
-
-    await waClient.sendText(
-      whatsappNumber,
-      `Hello ${name} 👋
-
-Thank you for contacting Bhuvanesh Gopal 😊
-
-Your message has been received successfully.
-We will contact you shortly.`
-    );
-
-    return NextResponse.json({
-      success: true,
-      message: "Email and WhatsApp message sent successfully",
-    });
-
+    return NextResponse.json({ success: true });
   } catch (err: any) {
-    console.error("Error:", err);
-
-    return NextResponse.json(
-      { error: "Failed to send email or WhatsApp message." },
-      { status: 500 }
-    );
+    console.error("Mail error:", err);
+    return NextResponse.json({ error: "Failed to send email." }, { status: 500 });
   }
 }
