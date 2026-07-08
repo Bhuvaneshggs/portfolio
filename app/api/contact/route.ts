@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     await transporter.sendMail({
       from: `"Bhuvanesh Gopal" <${MY_EMAIL}>`,
       to: email,
-      cc: MY_EMAIL,
+      bcc: MY_EMAIL,
       subject: "Thank you for contacting Bhuvanesh Gopal",
       html: `
         <div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#080808;color:#f5f0ea;border-radius:8px;overflow:hidden;">
